@@ -80,7 +80,6 @@ var
    Bh, Bl :Double;
 begin
      P_ := A_ * B_;
-
      SplA := Split( A_ );
      SplB := Split( B_ );
      Ah   := SplA[0];
@@ -131,7 +130,6 @@ begin
      Result.hi := finalHi;
      Result.lo := finalLo;
 end;
-//==============================================================================
 
 class function TDDouble.SubDD( const X_,Y_:TDDouble ) :TDDouble;
 begin
@@ -140,29 +138,42 @@ end;
 
 class function TDDouble.MulDD( const X_,Y_:TDDouble ) :TDDouble;
 var
-   p1, p2, cross1, cross2, cross3 :Double;
-   temp :array[0..3] of Double;
+   p1, p2 :Double;
+   cross1, cross2, cross3 :Double;
+   temp   :array[0..3] of Double;
+   i, j   :Integer;
+   swap   :Double;
 begin
-     // 1) X_.hi * Y_.hi
+     // (1) メイン積
      TwoProd( X_.hi, Y_.hi, p1, p2 );
 
-     // 2) クロス項
-     cross1 := X_.hi * Y_.lo;
-     cross2 := X_.lo * Y_.hi;
-     cross3 := X_.lo * Y_.lo;
+     // (2) クロス項
+     cross1 := X_.hi*Y_.lo;
+     cross2 := X_.lo*Y_.hi;
+     cross3 := X_.lo*Y_.lo;
 
-     // 3) 全部を一気に配列化 (p1, p2, cross1+cross2, cross3)
-     temp[0] := p1;                       // 最も大きい可能性大
+     // (3) 4つを配列化
+     temp[0] := p1;
      temp[1] := p2;
-     temp[2] := ( cross1 + cross2 );
+     temp[2] := cross1 + cross2;  // 2つまとめ
      temp[3] := cross3;
 
-     // 4) 4項をAddDDと同様の手順でまとめる (ローカルな4項→2項正規化)
-     //    => Shewchuk式にするとより厳密
-     Result := TDDouble(0);
-     // 順次AddDDするか、2Sum展開でまとめる
-     // ここでは段階的AddDDで実装例
+     // (4) 絶対値の大きい順にソート (バブルソート; 4要素なので簡易で十分)
+     for i := 0 to 2 do
+     begin
+          for j := i+1 to 3 do
+          begin
+               if Abs( temp[j] ) > Abs( temp[i] ) then
+               begin
+                    swap := temp[i];
+                    temp[i] := temp[j];
+                    temp[j] := swap;
+               end;
+          end;
+     end;
 
+     // (5) 順次 AddDD で畳み込む
+     Result := 0; // TDDouble(0) と同義
      Result := AddDD( Result, TDDouble( temp[0] ) );
      Result := AddDD( Result, TDDouble( temp[1] ) );
      Result := AddDD( Result, TDDouble( temp[2] ) );
@@ -177,7 +188,6 @@ begin
      if ( ( Y_.hi = 0 ) and ( Y_.lo = 0 ) ) then raise Exception.Create( 'TDDouble.DivDD: divide by zero' );
 
      Z := TDDouble( 1 / Double(Y_) );
-
      for I := 1 to 2 do
      begin
           Diff := 1 - ( Y_ * Z );
@@ -282,7 +292,7 @@ end;
 
 class function TDDouble.Parse( const S_:String ) :TDDouble;
 var
-     D :Double;
+   D :Double;
 begin
      D := StrToFloat( S_ );
      Result := D;
