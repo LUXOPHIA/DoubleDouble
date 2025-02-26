@@ -140,16 +140,33 @@ end;
 
 class function TDDouble.MulDD( const X_,Y_:TDDouble ) :TDDouble;
 var
-   P1, P2 :Double;
-   C1, C2, C3 :TDDouble;
+   p1, p2, cross1, cross2, cross3 :Double;
+   temp :array[0..3] of Double;
 begin
-     TwoProd( X_.hi, Y_.hi, P1, P2 );
+     // 1) X_.hi * Y_.hi
+     TwoProd( X_.hi, Y_.hi, p1, p2 );
 
-     C1 := Normalize2( X_.hi*Y_.lo, X_.lo*Y_.hi );
-     C2 := TDDouble.AddDD( TDDouble( P2 ), C1 );
-     C3 := TDDouble.AddDD( C2, TDDouble( X_.lo * Y_.lo ) );
+     // 2) クロス項
+     cross1 := X_.hi * Y_.lo;
+     cross2 := X_.lo * Y_.hi;
+     cross3 := X_.lo * Y_.lo;
 
-     Result := TDDouble.AddDD( TDDouble( P1 ), C3 );
+     // 3) 全部を一気に配列化 (p1, p2, cross1+cross2, cross3)
+     temp[0] := p1;                       // 最も大きい可能性大
+     temp[1] := p2;
+     temp[2] := ( cross1 + cross2 );
+     temp[3] := cross3;
+
+     // 4) 4項をAddDDと同様の手順でまとめる (ローカルな4項→2項正規化)
+     //    => Shewchuk式にするとより厳密
+     Result := TDDouble(0);
+     // 順次AddDDするか、2Sum展開でまとめる
+     // ここでは段階的AddDDで実装例
+
+     Result := AddDD( Result, TDDouble( temp[0] ) );
+     Result := AddDD( Result, TDDouble( temp[1] ) );
+     Result := AddDD( Result, TDDouble( temp[2] ) );
+     Result := AddDD( Result, TDDouble( temp[3] ) );
 end;
 
 class function TDDouble.DivDD( const X_,Y_:TDDouble ) :TDDouble;
