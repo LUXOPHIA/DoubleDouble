@@ -58,11 +58,9 @@ function Cos( const X_:TDDouble ) :TDDouble; overload;
 
 implementation //############################################################### ■
 
-//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【 R E C O R D 】
-
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TDDouble
 
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& private
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& private
 
 //////////////////////////////////////////////////////////////////// M E T H O D
 
@@ -117,7 +115,8 @@ var
    sum2, err2,
    hi1, lo1,
    hi2, lo2,
-   hi3, lo3   :Double;
+   hi3, lo3,
+   finalHi, finalLo :Double;
 begin
      TwoSum( X_.hi, Y_.hi, S, E );
      TwoSum( X_.lo, Y_.lo, s2, e2 );
@@ -127,9 +126,12 @@ begin
      TwoSum( lo1, err2, hi2, lo2 );
      TwoSum( hi2, e2, hi3, lo3 );
 
-     Result.hi := hi1 + hi3;
-     Result.lo := lo2 + lo3;
+     TwoSum( (hi1 + hi3), (lo2 + lo3), finalHi, finalLo );
+
+     Result.hi := finalHi;
+     Result.lo := finalLo;
 end;
+//==============================================================================
 
 class function TDDouble.SubDD( const X_,Y_:TDDouble ) :TDDouble;
 begin
@@ -339,7 +341,6 @@ begin
      S  := Exp( Xd );
      Result := TDDouble( S );
 
-     // テイラー補正 (簡易)
      Sum  := 1;
      Term := 1;
      XDD  := X_;
